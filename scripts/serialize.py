@@ -20,7 +20,20 @@ from omniORB import CORBA
 import OpenRTM_aist
 import RTM
 orb = CORBA.ORB_init(sys.argv, CORBA.ORB_ID)
-obj = orb.string_to_object("corbaloc:iiop:"+args.manager+"/manager")
+
+while True:
+    try:
+        obj = orb.string_to_object("corbaloc:iiop:"+args.manager+"/manager")
+        if obj is None:
+            raise Exception("Object reference is nil")
+        if not obj._non_existent():
+            break
+    except (CORBA.TRANSIENT, CORBA.COMM_FAILURE):
+        print("Waiting for Manager to start...")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    time.sleep(1)
+
 mgr = obj._narrow(RTM.Manager)
 
 rtcs = []
